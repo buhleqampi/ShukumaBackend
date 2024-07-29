@@ -1,110 +1,121 @@
-const Business = require('../models/business_model')
-const UploadImage = require('../middleware/images_controllers')
+const express = require('express');
+const router = express.Router();
+const TextMessage = require('./models/TextMessage'); // Adjust the path as needed
 
-exports.create = async (req, res) => {
-    
-    if (!req.body) {
-        res.status(400).send({ message: "Content can not be empty!" });
-        return;
-      }
-        // const imgUrl  = await UploadImage.UploadImage(req.files.images)
-        
-        const business = new Business({
-        name: req.body.name,
-        // img: imgUrl.Location,
-        email: req.body.email,
-        tel_no: req.body.tel_no,
-        address: req.body.address,
-        description: req.body.description
-    })
+router.post('/v1/business/message', async (req, res) => {
+  try {
+    const { type, text } = req.body;
 
-    business
-        .save(business)
-        .then(data => {
-            res.send(data)
-        })
-        .catch(err => {
-            res.status(500).send({
-                msg: err.message || "Some error while trying to save the business"
-            })
-        })
-}
+    const newTextMessage = new TextMessage({
+      type,
+      text
+    });
 
-exports.findAll = (req, res) => {
-    const name = req.query.name
-    let condition = name ? { name: { $regex: new RegExp(name), $options: 'i'} } : {}
+    const savedMessage = await newTextMessage.save();
+    res.status(201).json(savedMessage);
+  } catch (error) {
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
-    Business.find(condition)
-        .then(data => {
-            res.status(200).send(data)
-        })
-        .catch(err => {
-            res.status(500).send({ msg: err.message || "Some error occurred while retrieving data" })
-        })
-}
-exports.findOne = async (req, res) => {
-    const id = req.params.id;
-  
-    Business.findById(id)
-      .then(data => {
-        if (!data)
-          res.status(404).send({ message: "Not found Shop with id " + id });
-        else res.send(data);
-      })
-      .catch(err => {
-        res
-          .status(500)
-          .send({ message: "Error retrieving Shop with id=" + id });
-      });
-  };
+module.exports = router;
 
-exports.update = async (req, res) => {
-    if(!req.body) {
-        return res.status(400).send({ msg: "Date to update cannot be empty!" })
-    }
 
-    const id = req.params.id
-    
-    Business.findByIdAndUpdate(id, req.body, { useFindAndModify: false })
-        .then(data => {
-            if(!data) {
-                res.status(404).send({
-                    msg: `Cannot update Shope with id=${id}. Maybe it was not found`
-                })
-            } else res.status(201).send({ msg: "Shop was updated successfully." })
-        })
-        .catch(err => {
-            res.status(500).send({ msg: `Error updating Shop with id=${id}`})
-        })
-}
 
-exports.delete = async (req, res) => {
-    const id = req.params.id
 
-    Business.findByIdAndRemove(id, { useFindAndModify: false })
-        .then(data => {
-            if(!data) {
-                res.status(404).send({ msg: `Cannot delete Shop with id=${id}. Maybe Shop was not found`})
-            } else res.status(201).send({ msg: 'Shop was deleted successfully!' })
-        })
-        .catch( err => {
-            res.status(500).send({ msg: `Could not delete Shop with id=${id}` })
-        })
-}
 
-// exports.deleteAll = (req, res) => {
-    
-//     Shop.deleteMany()
-//         .then(data => {
-//             res.status(404).send({ 
-//                 message: data + ' All shops were deleted successfully!' 
-//             });
-           
-//         })
-//         .catch(err => {
-//             res.status(500).send({
-//                message:
-//                 err.message || "Some error occured while removing all Products."
-//             });
-//         });
-// }
+
+
+
+
+
+
+
+// const https = require('https');
+
+// const API_KEY = process.env.API_KEY;
+// const API_SECRET = process.env.API_SECRET;
+
+// const forwardRequest = (path, method, req, res) => {
+//   const data = JSON.stringify(req.body);
+
+//   const options = {
+//     hostname: 'localhost',
+//     port: 3000,
+//     path,
+//     method,
+//     headers: {
+//       'Authorization': `Bearer ${API_KEY}`,
+//       'x-api-secret': API_SECRET,
+//       'Content-Type': 'application/json',
+//       'Content-Length': data.length
+//     }
+//   };
+
+//   const apiReq = https.request(options, (apiRes) => {
+//     let responseData = '';
+
+//     apiRes.on('data', (chunk) => {
+//       responseData += chunk;
+//     });
+
+//     apiRes.on('end', () => {
+//       res.status(apiRes.statusCode).json(JSON.parse(responseData));
+//     });
+//   });
+
+//   apiReq.on('error', (error) => {
+//     res.status(500).json({ error: 'Internal Server Error' });
+//   });
+
+//   apiReq.write(data);
+//   apiReq.end();
+// };
+
+// exports.create = (req, res) => {
+//   forwardRequest('/v1/business/message', 'POST', req, res);
+// };
+
+// exports.findAll = (req, res) => {
+//   forwardRequest('/v1/businesses', 'GET', req, res);
+// };
+
+// exports.findOne = (req, res) => {
+//   forwardRequest(`/v1/business/message/${req.params.id}`, 'GET', req, res);
+// };
+
+// exports.update = (req, res) => {
+//   forwardRequest(`/v1/business/message/${req.params.id}`, 'PUT', req, res);
+// };
+
+// exports.delete = (req, res) => {
+//   forwardRequest(`/v1/business/message/${req.params.id}`, 'DELETE', req, res);
+// };
+
+// exports.getSlots = (req, res) => {
+//   forwardRequest('/v1/business/message/get-slots', 'POST', req, res);
+// };
+
+// exports.uploadFile = (req, res) => {
+//   forwardRequest('/v1/business/message/file', 'POST', req, res);
+// };
+
+// exports.getSlot = (req, res) => {
+//   forwardRequest('/v1/business/get-slot', 'POST', req, res);
+// };
+
+// exports.createCard = (req, res) => {
+//   forwardRequest('/v1/business/card', 'POST', req, res);
+// };
+
+// exports.validateOtp = (req, res) => {
+//   forwardRequest('/v1/business/self/otp/validate', 'POST', req, res);
+// };
+
+// exports.register = (req, res) => {
+//   forwardRequest('/v1/business/self/register', 'POST', req, res);
+// };
+
+// exports.deregister = (req, res) => {
+//   forwardRequest('/v1/business/self/deregister', 'POST', req, res);
+// };
